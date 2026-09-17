@@ -1,0 +1,8 @@
+const chat=document.querySelector('#chat'),q=document.querySelector('#question'),ctx=document.querySelector('#context'),img=document.querySelector('#image'),sub=document.querySelector('#subject'),send=document.querySelector('#send'),status=document.querySelector('#status');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+function add(text,type){const d=document.createElement('div');d.className='msg '+type;d.innerHTML=(type==='ai'?'<b>StudyPilot</b><br>':'<b>You</b><br>')+esc(text).replace(/\n/g,'<br>');chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
+function dataURL(file){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(file)})}
+send.onclick=async()=>{const text=q.value.trim();if(!text&&!img.files.length)return;add(text||'[Screenshot uploaded]','user');send.disabled=true;status.textContent='Thinking...';
+const body={subject:sub.value,question:text,context:ctx.value};if(img.files[0])body.image=await dataURL(img.files[0]);
+try{const r=await fetch('/api/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw Error();const data=await r.json();add(data.answer,'ai')}catch(e){add('Your StudyPilot interface is working, but the AI server still needs to be deployed and connected.','ai')}finally{send.disabled=false;status.textContent='Ready'}};
+document.querySelector('#clear').onclick=()=>{chat.innerHTML='<div class="msg ai"><b>StudyPilot</b><br>Pick a subject and send a question, lesson notes, or screenshot.</div>';q.value='';ctx.value='';img.value=''};
